@@ -176,6 +176,9 @@ namespace notes_backend.Migrations
                     b.Property<DateTime?>("Updated")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("userId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.ToTable("Notes");

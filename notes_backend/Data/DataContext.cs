@@ -8,5 +8,5 @@ public class DataContext : IdentityDbContext<User>
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
-    public DbSet<Note> Notes { get; set; }
+    public DbSet<Note> Notes => Set<Note>();
 }

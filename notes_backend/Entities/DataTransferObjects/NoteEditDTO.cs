@@ -2,7 +2,7 @@
 
 namespace notes_backend.Entities.DataTransferObjects
 {
-    public class NoteAddEditDTO
+    public class NoteEditDTO
     {
         [Required(ErrorMessage = "No title provided.")]
         public string? Title { get; set; }

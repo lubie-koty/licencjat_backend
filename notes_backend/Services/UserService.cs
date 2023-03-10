@@ -16,10 +16,10 @@ namespace notes_backend.Services
             _mapper = mapper;
         }
 
-        public Task<IdentityResult> RegisterUser(UserRegisterDTO userData)
+        public async Task<IdentityResult> RegisterUser(UserRegisterDTO userData)
         {
             var user = _mapper.Map<User>(userData);
-            return _userManager.CreateAsync(user, userData.Password);
+            return await _userManager.CreateAsync(user, userData.Password);
         }
     }
 }
