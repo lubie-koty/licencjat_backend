@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using notes_backend.Entities.DataTransferObjects;
 using notes_backend.Services;
+using notes_backend.Interfaces;
 
 namespace notes_backend.Controllers
 {
@@ -9,11 +10,11 @@ namespace notes_backend.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly UserService _userService;
+        private readonly IUsersService _usersService;
 
-        public UsersController(UserService userService)
+        public UsersController(IUsersService usersService)
         {
-            _userService = userService;
+            _usersService = usersService;
         }
 
         [HttpPost("register")]
@@ -24,7 +25,7 @@ namespace notes_backend.Controllers
                 return BadRequest();
             }
 
-            var res = await _userService.RegisterUser(userData);
+            var res = await _usersService.RegisterUser(userData);
             if (!res.Succeeded)
             {
                 return BadRequest(new ActionResponseDTO
@@ -35,6 +36,18 @@ namespace notes_backend.Controllers
             }
 
             return StatusCode(201);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult> LoginUser([FromBody]UserLoginDTO userData)
+        {
+            var result = await _usersService.LoginUser(userData);
+            if (result.IsSuccessful == false)
+            {
+                return Unauthorized(result);
+            }
+
+            return Ok(result);
         }
     }
 }

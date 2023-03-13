@@ -10,6 +10,8 @@ namespace notes_backend
         {
             CreateMap<UserRegisterDTO, User>()
                 .ForMember(u => u.UserName, opt => opt.MapFrom(x => x.Email));
+            CreateMap<NoteDTO, Note>()
+                .ForMember(n => n.UserId, opt => opt.MapFrom(x => x.UserId));
         }
         
     }

@@ -1,29 +1,36 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using notes_backend.Services;
 using notes_backend.Entities.Models;
 using notes_backend.Entities.DataTransferObjects;
+using notes_backend.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace notes_backend.Controllers
 {
     [Route("api/notes")]
+    [Authorize]
     [ApiController]
     public class NotesController : ControllerBase
     {
-        private readonly NoteService _noteService;
-        public NotesController(NoteService noteService)
+        private readonly INotesService _notesService;
+        private readonly UserManager<User> _userManager;
+
+        public NotesController(INotesService notesService, UserManager<User> userManager)
         {
-            _noteService = noteService;
+            _notesService = notesService;
+            _userManager = userManager;
         }
 
+        private async Task<string> GetCurrentUserId() => (await _userManager.GetUserAsync(User)).Id;
+
         [HttpGet("{userId}")]
-        public async Task<ActionResult<List<Note>>> GetNotes(int userId)
+        public async Task<ActionResult<List<Note>>> GetNotes(string userId)
         {
-            return Ok(await _noteService.GetUserNotes(userId));
+            return Ok(await _notesService.GetUserNotes(userId));
         }
 
         [HttpPost]
-        public async Task<ActionResult<ActionResponseDTO>> PostNote([FromBody] NoteAddDTO noteData)
+        public async Task<ActionResult<ActionResponseDTO>> PostNote([FromBody] NoteDTO noteData)
         {
             if (noteData == null || !ModelState.IsValid)
             {
@@ -33,23 +40,18 @@ namespace notes_backend.Controllers
                     Errors = new List<string>() { "Invalid note data." }
                 });
             }
-            var result = await _noteService.AddNote(noteData);
-            if (result == 0)
+
+            var result = await _notesService.AddNote(await GetCurrentUserId(), noteData);
+            if (result.IsSuccessful == false)
             {
-                return BadRequest(new ActionResponseDTO
-                {
-                    IsSuccessful = false,
-                    Errors = new List<string>() { "Error while adding a note." }
-                });
+                return BadRequest(result);
             }
-            return Ok(new ActionResponseDTO
-            {
-                IsSuccessful = true
-            });
+
+            return Ok(result);
         }
 
         [HttpPatch("{noteId}")]
-        public async Task<ActionResult<ActionResponseDTO>> PatchNote(int noteId, [FromBody] NoteEditDTO noteData)
+        public async Task<ActionResult<ActionResponseDTO>> PatchNote(int noteId, [FromBody] NoteDTO noteData)
         {
             if (noteData == null || !ModelState.IsValid)
             {
@@ -59,37 +61,26 @@ namespace notes_backend.Controllers
                     Errors = new List<string>() { "Invalid note data." }
                 });
             }
-            var result = await _noteService.EditNote(noteId, noteData);
-            if (result == 0)
+
+            var result = await _notesService.EditNote(noteId, noteData);
+            if (result.IsSuccessful == false)
             {
-                return BadRequest(new ActionResponseDTO
-                {
-                    IsSuccessful = false,
-                    Errors = new List<string>() { "Error while editing a note." }
-                });
+                return BadRequest(result);
             }
-            return Ok(new ActionResponseDTO
-            {
-                IsSuccessful = true
-            });
+
+            return Ok(result);
         }
 
         [HttpDelete("{noteId}")]
         public async Task<ActionResult<ActionResponseDTO>> DeleteNote(int noteId)
         {
-            var result = await _noteService.DeleteNote(noteId);
-            if (result == 0)
+            var result = await _notesService.DeleteNote(noteId);
+            if (result.IsSuccessful == false)
             {
-                return BadRequest(new ActionResponseDTO
-                {
-                    IsSuccessful = false,
-                    Errors = new List<string>() { "Error while deleting a note." }
-                });
+                return BadRequest(result);
             }
-            return Ok(new ActionResponseDTO
-            {
-                IsSuccessful = true
-            });
+
+            return Ok(result);
         }
     }
 }
