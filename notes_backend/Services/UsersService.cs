@@ -33,14 +33,7 @@ namespace notes_backend.Services
             {
                 return new AuthenticationDTO { IsSuccessful = false, ErrorMessage = "Invalid password." };
             }
-
-            var token = new JwtSecurityTokenHandler().WriteToken(
-                _jwtService.GetTokenOptions(
-                    _jwtService.GetSigningCredentials(),
-                    _jwtService.GetClaims(user)
-                )
-            );
-            return new AuthenticationDTO { IsSuccessful = true, Token = token };
+            return new AuthenticationDTO { IsSuccessful = true, Token = _jwtService.GetSerializedToken(user) };
         }
     }
 }

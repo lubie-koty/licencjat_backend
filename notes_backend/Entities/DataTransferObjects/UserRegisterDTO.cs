@@ -10,7 +10,5 @@ namespace notes_backend.Entities.DataTransferObjects
         public string? Email { get; set; }
         [Required(ErrorMessage = "No password provided.")]
         public string? Password { get; set; }
-        [Compare("Password", ErrorMessage = "Passwords do not match.")]
-        public string? PasswordConfirmation { get; set; }
     }
 }

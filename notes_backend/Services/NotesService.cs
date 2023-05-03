@@ -62,8 +62,8 @@ namespace notes_backend.Services
                 };
             }
 
-            note.Title = noteData.Title;
-            note.Content = noteData.Content;
+            note.Title = noteData.Title!;
+            note.Content = noteData.Content!;
             note.Updated = DateTime.Now.ToUniversalTime();
             try
             {

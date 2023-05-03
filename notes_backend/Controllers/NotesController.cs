@@ -21,12 +21,12 @@ namespace notes_backend.Controllers
             _userManager = userManager;
         }
 
-        private async Task<string> GetCurrentUserId() => (await _userManager.GetUserAsync(User)).Id;
+        private string GetCurrentUserId() => _userManager.GetUserId(User);
 
-        [HttpGet("{userId}")]
-        public async Task<ActionResult<List<Note>>> GetNotes(string userId)
+        [HttpGet]
+        public async Task<ActionResult<List<Note>>> GetNotes()
         {
-            return Ok(await _notesService.GetUserNotes(userId));
+            return Ok(await _notesService.GetUserNotes(GetCurrentUserId()));
         }
 
         [HttpPost]
@@ -41,7 +41,7 @@ namespace notes_backend.Controllers
                 });
             }
 
-            var result = await _notesService.AddNote(await GetCurrentUserId(), noteData);
+            var result = await _notesService.AddNote(GetCurrentUserId(), noteData);
             if (result.IsSuccessful == false)
             {
                 return BadRequest(result);

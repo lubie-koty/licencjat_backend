@@ -11,40 +11,40 @@ namespace notes_backend.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IConfigurationSection _jwtConfiguration;
+        private JwtSecurityTokenHandler _tokenHandler;
 
         public JwtService(IConfiguration configuration)
         {
             _configuration = configuration;
             _jwtConfiguration = _configuration.GetSection("JWTSettings");
+            _tokenHandler = new JwtSecurityTokenHandler();
         }
 
-        public SigningCredentials GetSigningCredentials()
+        private SecurityTokenDescriptor GetTokenDescriptor(IdentityUser user)
         {
-            return new SigningCredentials
-            (
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.GetSection("securityKey").Value)),
-                SecurityAlgorithms.HmacSha256
-            );
-        }
-
-        public List<Claim> GetClaims(IdentityUser user)
-        {
-            return new List<Claim>
+            return new SecurityTokenDescriptor
             {
-                new Claim(ClaimTypes.Name, user.Email)
+                Issuer = _jwtConfiguration["validIssuer"],
+                Audience = _jwtConfiguration["validAudience"],
+                Expires = DateTime.Now.AddMinutes(Convert.ToDouble(_jwtConfiguration["expiryInMinutes"])),
+                SigningCredentials = new SigningCredentials
+                (
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration["securityKey"]!)),
+                    SecurityAlgorithms.HmacSha512Signature
+                ),
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("Id", Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                })
             };
         }
 
-        public JwtSecurityToken GetTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
+        public string GetSerializedToken(IdentityUser user)
         {
-            return new JwtSecurityToken
-            (
-                issuer: _jwtConfiguration["validIssuer"],
-                audience: _jwtConfiguration["validAudience"],
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_jwtConfiguration["expiryInMinutes"])),
-                signingCredentials: signingCredentials,
-                claims: claims
-            );
+            return _tokenHandler.WriteToken(_tokenHandler.CreateToken(GetTokenDescriptor(user)));
         }
     }
 }
